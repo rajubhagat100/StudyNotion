@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 const User = require("../models/User");
 const OTP = require("../models/OTP");
 const jwt = require("jsonwebtoken");
@@ -73,7 +73,7 @@ exports.signup = async (req, res) => {
 		}
 
 		// Hash the password
-		const hashedPassword = await bcrypt.hash(password, 10);
+		const hashedPassword = await bcryptjs.hash(password, 10);
 
 		// Create the user
 		let approved = "";
@@ -140,7 +140,7 @@ exports.login = async (req, res) => {
 		}
 
 		// Generate JWT token and Compare Password
-		if (await bcrypt.compare(password, user.password)) {
+		if (await bcryptjs.compare(password, user.password)) {
 			const token = jwt.sign(
 				{ email: user.email, id: user._id, accountType: user.accountType },
 				process.env.JWT_SECRET,
@@ -235,7 +235,7 @@ exports.changePassword = async (req, res) => {
 		const { oldPassword, newPassword, confirmNewPassword } = req.body;
 
 		// Validate old password
-		const isPasswordMatch = await bcrypt.compare(
+		const isPasswordMatch = await bcryptjs.compare(
 			oldPassword,
 			userDetails.password
 		);
@@ -256,7 +256,7 @@ exports.changePassword = async (req, res) => {
 		}
 
 		// Update password
-		const encryptedPassword = await bcrypt.hash(newPassword, 10);
+		const encryptedPassword = await bcryptjs.hash(newPassword, 10);
 		const updatedUserDetails = await User.findByIdAndUpdate(
 			req.user.id,
 			{ password: encryptedPassword },

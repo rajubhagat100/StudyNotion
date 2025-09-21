@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const mailSender = require("../utils/mailSender");
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 
 exports.resetPasswordToken = async (req, res) => {
 	try {
@@ -69,7 +69,7 @@ exports.resetPassword = async (req, res) => {
 				message: `Token is Expired, Please Regenerate Your Token`,
 			});
 		}
-		const encryptedPassword = await bcrypt.hash(password, 10);
+		const encryptedPassword = await bcryptjs.hash(password, 10);
 		await User.findOneAndUpdate(
 			{ token: token },
 			{ password: encryptedPassword },
