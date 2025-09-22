@@ -13,28 +13,28 @@ const { cloudinaryConnect } = require("./config/cloudinary");
 const fileUpload = require("express-fileupload");
 const dotenv = require("dotenv");
 
+// Load environment variables
 dotenv.config();
-const PORT = process.env.PORT || 4000;
 
-// Database connect
+// Connect to database
 database.connect();
 
-// Middlewares
-app.use(express.json());
-app.use(cookieParser());
-
-// ✅ FIXED CORS CONFIGURATION
+// Allowed origins (add more if needed)
 const allowedOrigins = [
-  "http://localhost:3000", // local development
-  "https://studynotion-frontend-eight.vercel.app", // deployed frontend
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://studynotion-frontend-eight.vercel.app",
 ];
 
+// CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (Postman, server-to-server)
+      if (!origin || allowedOrigins.some((o) => origin.startsWith(o))) {
         callback(null, true);
       } else {
+        console.error("❌ Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -42,31 +42,37 @@ app.use(
   })
 );
 
-// File upload middleware
-app.use(
-  fileUpload({
-    useTempFiles: true,
-    tempFileDir: "/tmp",
-  })
-);
+app.use(express.json());
+app.use(cookieParser());
+app.use(fileUpload({ useTempFiles: true, tempFileDir: "/tmp/" }));
 
-// Cloudinary connection
+// Cloudinary connect
 cloudinaryConnect();
 
 // Routes
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/profile", profileRoutes);
-app.use("/api/v1/course", courseRoutes);
 app.use("/api/v1/payment", paymentRoutes);
+app.use("/api/v1/course", courseRoutes);
 
 // Default route
 app.get("/", (req, res) => {
-  return res.json({
+  res.json({
     success: true,
-    message: "Your server is up and running....",
+    message: "Server is up and running...",
   });
 });
 
+// Error handler for CORS (optional but helpful)
+app.use((err, req, res, next) => {
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({ success: false, message: "CORS Error: Origin not allowed" });
+  }
+  next(err);
+});
+
+// Start server
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`App is running at ${PORT}`);
+  console.log(`✅ Server is running on port ${PORT}`);
 });
